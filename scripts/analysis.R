@@ -9,7 +9,7 @@ library(see)
 source("scripts/functions.R")
 
 
-# read data ---------------------------------------------------------------
+# Read data ---------------------------------------------------------------
 
 paths <- list.files(path = "input/", pattern = "xlsx", full.names = TRUE, )
 
@@ -34,9 +34,10 @@ biblio_data <- map(.x = paths, .f = read_biblio) %>%
 pub_type_per_year <- biblio_data %>% 
     count(document_type, publication_year, name = "counts") %>% 
     mutate(publication_year = as.numeric(publication_year)) %>% 
-    # An early access review has publication date >2025
+    # an early access review has publication date >2025
     filter(publication_year <= 2025)
 
+# identify years where the number of reviews >= articles
 tragic_years <- pub_type_per_year %>% 
     filter(document_type %in% c("Article", "Review")) %>% 
     pivot_wider(names_from = "document_type",
@@ -79,3 +80,44 @@ pub_type_per_year %>%
     scale_color_okabeito() +
     
     theme_bv()
+
+
+ggsave(filename = "outputs/pubs_over_years.jpg", height = 4, width = 6)
+
+
+# Who wrote so many reviews? ----------------------------------------------
+
+review_authors_in_tragic_years <- biblio_data %>% 
+    filter(publication_year %in% tragic_years$publication_year) %>% 
+    filter(document_type == "Review") %>% 
+    select(author = author_full_names, publication_year, article_title) %>% 
+    separate_longer_delim(author, delim = ";") %>% 
+    mutate(author = str_trim(author))
+
+
+top_10 <- review_authors_in_tragic_years %>% 
+    count(author, name = "counts") %>% 
+    slice_max(order_by = counts, n = 5) %>% 
+    pull(author) %>% 
+    rev()
+
+review_authors_in_tragic_years %>% 
+    mutate(author = ifelse(author %in% top_10, yes = author, no = "Other"),
+           author = factor(x = author, level = c("Other", top_10))) %>% 
+    count(author, publication_year, name = "counts") %>% 
+    mutate(prop = counts/sum(counts) * 100, .by = c(publication_year)) %>% 
+    ggplot(aes(x = publication_year, y = prop, fill = author)) +
+    
+    geom_col() +
+    
+    labs(x = "Tragic years", 
+         y = "Proportion of reviews per Author",
+         fill = "Author") +
+    
+    scale_fill_okabeito(order = c(8, 1:length(top_10)))
+
+ggsave(filename = "outputs/prop_authors_on_tragic_years.jpg", height = 4, width = 6)
+
+
+#' Are these authors that published a lot of reviews early in the field central 
+#' in the field network?
