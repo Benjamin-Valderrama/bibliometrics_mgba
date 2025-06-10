@@ -114,7 +114,12 @@ review_authors_in_tragic_years %>%
          y = "Proportion of reviews per Author",
          fill = "Author") +
     
-    scale_fill_okabeito(order = c(8, 1:length(top_10)))
+    scale_fill_okabeito(order = c(8, 1:length(top_10))) +
+    
+    scale_x_discrete(expand = c(0,0)) +
+    scale_y_continuous(expand = c(0,0)) +
+    
+    theme_bv()
 
 ggsave(filename = "outputs/prop_authors_on_tragic_years.jpg", height = 4, width = 6)
 
