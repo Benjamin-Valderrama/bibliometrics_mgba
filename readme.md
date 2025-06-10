@@ -16,13 +16,13 @@ I'm using [this published work](https://pmc.ncbi.nlm.nih.gov/articles/PMC9119018
 
 ## Results and Discussion
 
-#### [Who published all those reviews!?]{.underline}
+#### __Who published all those reviews!?__
 
 First, we wanted to explore the number of publications published by year (Figure 1A). In the Microbiome-Gut-Brain axis field, as in any other field, the tendency is to increase the number of original articles and reviews over the years. Note the big red dots representing years where the number of published reviews is at least as high as the number of published research articles (Figure 1A). These are called *'tragic years'*, as the number of research articles is lower than the number of reflective or compilation pieces. Note the lack of tragic years after 2018.
 
-For each *tragic year* we explored the proportion of reviews that were written by the authors that wrote the most reviews across all *tragic years* (Figure 1B). Interestingly, among the six most prolific review authors, four work on the same institution: John F. Cryan, Timothy G. Dinan, Gerard Clarke and Siobhain M. O'Mahony. Moreover, in year 2016, these four authors accounted for the largest proportion of reviews among the *tragic years*, as toghether they contributed with \~23.4% of the total number of reviews in the field.
+For each *tragic year* we explored the proportion of reviews that were written by the authors that wrote the most reviews across all *tragic years* (Figure 1B). Interestingly, among the six most prolific review authors, four work on the same institution: John F. Cryan, Timothy G. Dinan, Gerard Clarke and Siobhain M. O'Mahony. Moreover, in year 2016, these four authors accounted for the largest proportion of reviews among the *tragic years*, as toghether they contributed with \~23.4% of the total number of reviews in the field. Note that as journals report authors name sometimes with full names or with the initials, the calculated proportions are probably slightly underestimated.
 
-![**Figure 1: Years with high proportion of reviews and who authored them.** (A) Number of publications per year by publication type.Big red dots represent years where the number of published reviews (pink line) is at least as high as the number of published research articles (gold line). (B) Yearly proportion of reviewers written by the authors who published more reviews (in colors) and other authors (grey).](outputs/mains/figure1.jpg){width="1000" height="640"}
+![**Figure 1: Years with high proportion of reviews and who authored them.** (A) Number of publications per year by publication type.Big red dots represent years where the number of published reviews (pink line) is at least as high as the number of published research articles (gold line). (B) Yearly proportion of reviewers written by the authors who published more reviews (in colors) and other authors (grey).](outputs/mains/figure1.jpg)
 
 ## Strenghts and Limitations
 
