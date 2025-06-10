@@ -111,13 +111,15 @@ review_authors_in_tragic_years %>%
     geom_col() +
     
     labs(x = "Tragic years", 
-         y = "Proportion of reviews per Author",
+         y = "Proportion of reviews per author",
          fill = "Author") +
     
     scale_fill_okabeito(order = c(8, 1:length(top_10))) +
     
     scale_x_discrete(expand = c(0,0)) +
-    scale_y_continuous(expand = c(0,0)) +
+    scale_y_continuous(expand = c(0,0), 
+                       breaks = seq(0, 100, by = 20), 
+                       labels = paste0(seq(0, 100, by = 20), "%")) +
     
     theme_bv()
 
