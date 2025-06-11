@@ -10,7 +10,7 @@
 
 1.  [Abstract](##Abstract)
 2.  [Introduction](##Introduction)
-3.  [Methods](##ethods)
+3.  [Methods](##Methods)
 4.  [Results and Discussion](##Results-and-Discussion)
 5.  [Conclusion](##Conclusion)
 6.  Supplementary material
