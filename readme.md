@@ -28,6 +28,8 @@ I'm using this published work by [(Wang et al. 2020)](https://pmc.ncbi.nlm.nih.g
 
 ## Results and Discussion
 
+First, we wanted to explore the country-level collaboration network. We first identified the top three most cited countries: China (24,952 total citations; 30.4 citations per article on average), Ireland (19457 total citations, 155.7 citations per article on average) and USA (15,568 total citations, 49.7 citations per article on average). Then, we estimated the country-level collaboration networks based on the co authorship across papers in the database. We then plotted the collaboration of the top three most cited countries with other countries from other world regions: Asia (Figure 1A), Europe (Figure 1B), Africa (Figure 1C) and South America (Figure 1D).
+
 ![Collaboration networks between the 3 most productive countries and other world regions. (A) Asia (B) Europe (C) Africa (D) South America. The top 3 most productive countries (China, Ireland and USA) are shown in red. Other countries in grey.](outputs/mains/country_collab.jpg)
 
 ## Strenghts and Limitations
