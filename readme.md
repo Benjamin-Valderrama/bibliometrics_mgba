@@ -28,7 +28,7 @@ I'm using this published work by [(Wang et al. 2020)](https://pmc.ncbi.nlm.nih.g
 
 ## Results and Discussion
 
-![Collaboration networks between the 3 most productive countries and other world regions. (A) Asia (B) Europe (C) Africa (D) South America. The top 3 most productive countries (China, Ireland and USA) are shown in red. Other countries in grey.](outputs/mains/country_collab.jpg){alt="Collaboration networks between the 3 most productive countries and other world regions. (A) Asia (B) Europe (C) Africa (D) South America. The top 3 most productive countries (China, Ireland and USA) are shown in red. Other countries in grey."}
+![Collaboration networks between the 3 most productive countries and other world regions. (A) Asia (B) Europe (C) Africa (D) South America. The top 3 most productive countries (China, Ireland and USA) are shown in red. Other countries in grey.](outputs/mains/country_collab.jpg)
 
 ## Strenghts and Limitations
 
@@ -44,7 +44,9 @@ The data was collected using the [Web of science (WoS) search tool](https://www-
 
 **Data analysis and ploting**
 
-The data was analysed using the [bibliometrix](https://www.bibliometrix.org/home/) package. Networks were ploted using the [ggnet2](https://briatte.github.io/ggnet/#:~:text=The%20ggnet2%20function%20is%20a,one%2Dmode%20igraph%20network%20objects.) package
+The data was analysed using the [bibliometrix](https://www.bibliometrix.org/home/) package. Networks were ploted using the [ggnet2](https://briatte.github.io/ggnet/#:~:text=The%20ggnet2%20function%20is%20a,one%2Dmode%20igraph%20network%20objects.) package.
+
+All code used in the analysis and to produce the figures is publicly available in the script: 'scripts/analysis.R'. Custom functions used to facilitate the analysis can be found in 'scripts/functions.R'.
 
 ## References
 
