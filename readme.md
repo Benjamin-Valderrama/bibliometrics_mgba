@@ -8,13 +8,14 @@
 
 ## Index
 
-1.  [Abstract](##Abstract)
-2.  [Introduction](##Introduction)
-3.  [Methods](##Methods)
-4.  [Results and Discussion](##Results-and-Discussion)
-5.  [Conclusion](##Conclusion)
+1.  [Abstract](https://github.com/Benjamin-Valderrama/bibliometrics_mgba?tab=readme-ov-file#abstract)
+2.  [Introduction](https://github.com/Benjamin-Valderrama/bibliometrics_mgba?tab=readme-ov-file#introduction)
+3.  [Methods](https://github.com/Benjamin-Valderrama/bibliometrics_mgba?tab=readme-ov-file#methods)
+4.  [Results and Discussion](https://github.com/Benjamin-Valderrama/bibliometrics_mgba?tab=readme-ov-file#results-and-discussion)
+        4.1 [Top cited authors and countries, and who they collaborate with](https://github.com/Benjamin-Valderrama/bibliometrics_mgba?tab=readme-ov-file#top-cited-authors-and-countries-and-who-they-collaborate-with)
+5.  [Conclusion](https://github.com/Benjamin-Valderrama/bibliometrics_mgba?tab=readme-ov-file#conclusion)
 6.  Supplementary material
-7.  [References](##References)
+7.  [References](https://github.com/Benjamin-Valderrama/bibliometrics_mgba?tab=readme-ov-file#references)
 
 ------------------------------------------------------------------------
 
