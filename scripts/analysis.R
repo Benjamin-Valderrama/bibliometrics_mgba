@@ -12,146 +12,8 @@ library(sna)
 # import functions
 source("scripts/functions.R")
 
-#
 
-# Read data ---------------------------------------------------------------
-
-paths <- list.files(path = "input/", pattern = "xlsx", full.names = TRUE, )
-
-types_of_interest <- c("Review", "Review; Early Access", 
-                       "Review; Retracted Publication",
-                       
-                       "Article", "Article; Early Access",
-                       "Article; Retracted Publication",
-                       "Article; Proceedings Paper",
-                       
-                       "Correction",
-                       "Letter"
-                       )
-
-biblio_data <- map(.x = paths, .f = read_biblio) %>% 
-    list_rbind() %>% 
-    filter(document_type %in% types_of_interest)
-
-
-# Articles by year --------------------------------------------------------
-
-pub_type_per_year <- biblio_data %>% 
-    count(document_type, publication_year, name = "counts") %>% 
-    mutate(publication_year = as.numeric(publication_year)) %>% 
-    # an early access review has publication date >2025
-    filter(publication_year <= 2025)
-
-# identify years where the number of reviews >= articles
-tragic_years <- pub_type_per_year %>% 
-    filter(document_type %in% c("Article", "Review")) %>% 
-    pivot_wider(names_from = "document_type",
-                values_from = "counts") %>% 
-    mutate(tragic = ifelse(Review >= Article, yes = TRUE, no = FALSE)) %>% 
-    filter(tragic)
-    
-
-plot_pubs_over_years <- pub_type_per_year %>% 
-    ggplot(aes(x = publication_year, y = counts, color = document_type)) +
-    
-    geom_line(linewidth = 1, alpha = 0.8) +
-    geom_point(size = 2.5, alpha = 0.8) + 
-    
-    # add tragic years: years with less articles than reviews published
-    geom_point(data = tragic_years, inherit.aes = FALSE,
-               aes(x = publication_year, y = Review),
-               color = "tomato3",
-               size = 5) +
-    
-    labs(x = "Year", y = "Number of publications", color = "Publication type") +
-    
-    # use as few hardcoded variables as possible
-    scale_x_continuous(limits = c(min(pub_type_per_year$publication_year) - 1 ,
-                                  max(pub_type_per_year$publication_year) + 1
-                                  ),
-                       expand = c(0,0),
-                       breaks = seq(from = min(pub_type_per_year$publication_year),
-                                    to = max(pub_type_per_year$publication_year),
-                                    by = 3)
-                       ) +
-    
-    scale_y_continuous(limits = c(- 5 , max(pub_type_per_year$counts) + 10),
-                       expand = c(0,0),
-                       breaks = seq(from = 0,
-                                    to = max(pub_type_per_year$counts), 
-                                    length.out = 10)
-                       ) +
-    
-    scale_color_okabeito() +
-    
-    theme_bv() + 
-    theme(legend.position = "inside",
-          legend.position.inside = c(0.35, 0.8)
-          ); plot_pubs_over_years
-
-
-ggsave(filename = "outputs/pubs_over_years.jpg", 
-       plot = plot_pubs_over_years,
-       height = 4, width = 6)
-
-
-
-# Who wrote so many reviews?
-review_authors_in_tragic_years <- biblio_data %>% 
-    filter(publication_year %in% tragic_years$publication_year) %>% 
-    filter(document_type == "Review") %>% 
-    select(author = author_full_names, publication_year, article_title) %>% 
-    separate_longer_delim(author, delim = ";") %>% 
-    mutate(author = str_trim(author))
-
-top_10 <- review_authors_in_tragic_years %>% 
-    count(author, name = "counts") %>% 
-    slice_max(order_by = counts, n = 5) %>% 
-    pull(author) %>% 
-    rev()
-
-# Authors may have full names or initials, so these proportions are understimated.
-prop_review_authors_in_tragic_years <- review_authors_in_tragic_years %>% 
-    mutate(author = ifelse(author %in% top_10, yes = author, no = "Other"),
-           author = factor(x = author, level = c("Other", top_10))) %>% 
-    count(author, publication_year, name = "counts") %>% 
-    mutate(prop = counts/sum(counts) * 100, .by = c(publication_year))
-
-plot_prop_review_authors <- prop_review_authors_in_tragic_years %>% 
-    ggplot(aes(x = publication_year, y = prop, fill = author)) +
-    
-    geom_col() +
-    
-    labs(x = "Tragic years", 
-         y = "Proportion of reviews per author",
-         fill = "Author") +
-    
-    scale_fill_okabeito(order = c(8, 1:length(top_10))) +
-    
-    scale_x_discrete(expand = c(0,0)) +
-    scale_y_continuous(expand = c(0,0), 
-                       breaks = seq(0, 100, by = 20), 
-                       labels = paste0(seq(0, 100, by = 20), "%")) +
-    
-    theme_bv(); plot_prop_review_authors
-
-ggsave(filename = "outputs/prop_authors_on_tragic_years.jpg", 
-       plot_prop_review_authors,
-       height = 4, width = 6)
-
-
-
-# Put plots together
-figure1 <- plot_pubs_over_years + plot_prop_review_authors + 
-    plot_annotation(tag_levels = "A") &
-    theme(plot.tag = element_text(size = 20, face = "bold")); figure1
-
-ggsave(filename = "outputs/mains/figure1.jpg",
-       plot = figure1, height = 8, width = 10)
-
-
-
-# Interaction between world regions ---------------------------------------
+# Read data in ------------------------------------------------------------
 
 #' I found the 'bibliometrix' package that looks very helpful in facilitating
 #' some analyses. I'll do this part of the analysis using it.
@@ -168,23 +30,181 @@ biblio <- map(.x = paths, .f = convert2df) %>%
 # check missing CRs
 missingData(biblio)
 
+
+# Most cited authors over time --------------------------------------------
+
+# top most influential authors (all documents)
+authors_df <- biblio %>% 
+    select(UT, AU, PY, TC) %>% 
+    separate_longer_delim(AU, delim = ";") %>% 
+    # get number of pubs and citations by author and year
+    summarise(publications = n(),
+              citations = sum(TC, na.rm = TRUE),
+              .by = c(PY, AU)) %>% 
+    filter(publications > 2) %>% 
+    # add columns with total pubs (across years) by author 
+    mutate(total_citations = sum(citations), 
+           total_publications = sum(publications), .by = AU) %>% 
+    # add column for the axis of the plot
+    mutate(AU_w_details = paste0(AU, "\n(Total cits:", total_citations, "\n",
+                                 "Total pubs:", total_publications, ")"))
+
+top_authors_ordered <- authors_df %>% 
+    select(total_citations, AU_w_details) %>% 
+    # because we used mutate in 'authors_df', we need to remove the repeated rows
+    unique() %>% 
+    slice_max(n = 10, order_by = total_citations, with_ties = TRUE) %>% 
+    pull(AU_w_details)
+
+# results as heatmap
+top_authors_df <- authors_df %>% 
+    filter(AU_w_details %in% top_authors_ordered) %>% 
+    mutate(AU_w_details = factor(AU_w_details, 
+                                 levels = rev(top_authors_ordered)))
+
+breaks <- seq(from = 1e3,
+              to = (round(max(top_authors_df$citations)/1e3)) * 1e3,
+              by = 1e3)
+low_range <- paste0(c(breaks[1:length(breaks) -1] - 999), "-")
+low_range <- c(low_range, ">")
+labels <- paste0(low_range, breaks)
+
+
+plot_top_cited_authors <- top_authors_df %>% 
+    pivot_wider(id_cols = c(AU, AU_w_details, total_citations, total_publications),
+                names_from = PY, values_from = citations, values_fill = 0) %>% 
+    pivot_longer(cols = starts_with("20"),
+                 names_to = "PY", values_to = "citations") %>% 
+    mutate(PY = as.numeric(PY)) %>% 
+    ggplot(aes(x = PY, y = AU_w_details)) +
+    
+    geom_tile(aes(fill = citations), color = "black") +
+    
+    # # add line for the last 3 years: 
+    # # Note that the .5 is used to correctly place the line in the plot
+    # geom_vline(xintercept = max(top_authors_df$PY) - 3.5,
+    #            linewidth = 1.25,
+    #            linetype = "4141") +
+    
+    labs(x = "Years", 
+         y = "Most cited authors",
+         fill = "Number of\ncitations") +
+    
+    scale_fill_continuous(high = "#E75E00", low = "#ffeeb9", 
+                          na.value = "white",
+                          limits = c(1,
+                                     max(authors_df$citations)),
+                          breaks = breaks,
+                          labels = labels
+    ) +
+    
+    scale_x_continuous(expand = c(0,0), 
+                       breaks = seq(min(authors_df$PY),
+                                    max(authors_df$PY),
+                                    by = 2)) +
+    scale_y_discrete(expand = c(0,0)) +
+    
+    guides(fill = guide_legend(override.aes = list(linewidth = 0.75))) +
+    
+    theme_bv() +
+    theme(panel.grid.major = element_blank()); plot_top_cited_authors
+
+ggsave(file = "outputs/top_authors.jpg", 
+       plot = plot_top_cited_authors,
+       height = 6, width = 7)
+
+#
+
+# Most cited countries over time ------------------------------------------
+
+# get country info for each author
+countries_df <- metaTagExtraction(biblio, Field = "AU_CO", sep = ";")
+
+# papers published for each country across all years
+countries_by_year <- countries_df %>% 
+    select(UT, AU_CO, TC, PY) %>% 
+    separate_longer_delim(cols = AU_CO, delim = ";") %>% 
+    unique() %>% 
+    summarise(publications = n(),
+              citations = sum(TC, na.rm = TRUE),
+              .by = c(PY, AU_CO)) %>% 
+    filter(!is.na(AU_CO))
+
+# get years to plot
+valid_years <- countries_by_year %>% 
+    summarise(total_countries = n(), .by = PY) %>% 
+    filter(total_countries > 3) %>% 
+    pull(PY)
+
+# get countries to plot
+top_countries <- countries_by_year %>% 
+    filter(PY %in% valid_years) %>% 
+    summarise(total_citations = sum(citations), .by = AU_CO) %>% 
+    slice_max(n = 8, order_by = total_citations) %>% 
+    pull(AU_CO)
+
+# dataframe to plot
+top_countries_df <- countries_by_year %>% 
+    filter(PY %in% valid_years) %>% 
+    filter(AU_CO %in% top_countries) %>% 
+    mutate(rank = rank(citations, ties.method = "max"), .by = PY) %>% 
+    mutate(AU_CO = factor(x = AU_CO, levels = rev(top_countries)))
+
+plot_top_cited_countries <- top_countries_df %>% 
+    
+    ggplot(aes(x = PY, y = rank, color = AU_CO)) +
+    
+    geom_line(linewidth = 1.5, show.legend = FALSE, alpha = 0.8) +
+    
+    geom_point(size = 4.5, alpha = 0.8) +
+    geom_point(size = 1.5, color = "#fffff0") +
+    
+    scale_y_continuous(limits = c(1, 8),
+                       breaks = seq(1, 8, by = 1),
+                       labels = rev(seq(1, 8, by = 1))) +
+    
+    scale_x_continuous(limits = c(min(valid_years),
+                                  max(valid_years)),
+                       
+                       breaks = seq(min(valid_years),
+                                    max(valid_years),
+                                    by = 2)
+    ) +
+    labs(x = "Year",
+         y = "Most cited countries (Ranking)",
+         color = "Country") +
+    
+    scale_color_okabeito() +
+    theme_bv() +
+    theme(); plot_top_cited_countries
+
+
+ggsave(file = "outputs/top_countries.jpg", 
+       plot = plot_top_cited_countries,
+       height = 5, width = 6)
+
+
+
+
+
+# Collaboration networks of the most cited countries ----------------------
+
 # get a summary of the field
 field_analysis <- biblioAnalysis(biblio); field_analysis
 field_summary <- summary(field_analysis); field_summary
 
 # collaboration network of those countries
 M <- metaTagExtraction(biblio, Field = "AU_CO", sep = ";")
-NetMatrix <- biblioNetwork(M, 
-                           analysis = "collaboration", 
-                           network = "countries", sep = ";")
+net_matrix <- biblioNetwork(M,
+                            analysis = "collaboration", 
+                            network = "countries", sep = ";")
 
-
-df <- tibble(continent = unique(countries$continent))
 
 # use custom function to make country collaboration graphs
+df <- tibble(continent = unique(countries$continent))
 df_plots <- df %>% 
     mutate(collab_plot = map(.x = continent, 
-                             .f = ~plot_topn_with_continent(network = NetMatrix,
+                             .f = ~plot_topn_with_continent(network = net_matrix,
                                                             summary = field_summary,
                                                             topn = 3,
                                                             seed = 1,
@@ -202,51 +222,15 @@ plots_country_collab_graphs <- df_plots %>%
 ggsave(filename = "outputs/mains/country_collab.jpg",
        plot = plots_country_collab_graphs,
        height = 8, width = 16)
-    
-
-
-
-# # get the top 3 most cited countries + countries from other region
-# top3_cited_countries <- field_summary$TCperCountries[1:3, 1] %>% str_trim()
-# other_countries_to_plot <- countries[countries$continent == "SOUTH AMERICA", "countries"]
-# countries_of_interest <- paste(c(top3_cited_countries, countries_to_plot), collapse = "|")
-# 
-# # custom function to only keep countries from SOUTH AMERICA and EUROP
-# top3_coutries_of_interest_matrix <- filter_matrix(NetMatrix, 
-#                                                   by = "country",
-#                                                   pattern = countries_of_interest)
-# 
-# no_top_3 <- colnames(top3_coutries_of_interest_matrix)[!colnames(top3_coutries_of_interest_matrix) %in% top3_cited_countries]
-# 
-# my_colors <- c(rep("tomato3", length(top3_cited_countries)),
-#                rep("grey", length(no_top_3))
-#                )
-# 
-# ggnet2(top3_coutries_of_interest_matrix,
-#        color = my_colors,
-#        label = TRUE)
-
-
-
-# # add colors
-# my_counties <- countries
-# rownames(my_counties) <- countries$countries
-# my_counties <- my_counties[colnames(sa_europe_matrix), ]
-# continents <- my_counties[colnames(sa_europe_matrix), "continent"]
-# my_colors <- ifelse(grepl(x = continents, pattern = "SOUTH AMERICA"),
-#                     "tomato3",
-#                     "grey")
-# 
-# south_america_europe <- ggnet2(sa_europe_matrix,
-#        color = my_colors,
-#        mode = "target",
-#        label = TRUE)
 
 
 
 
-# Other -------------------------------------------------------------------
+# Figure 1 ----------------------------------------------------------------
 
-#' Are these authors that published a lot of reviews early in the field central 
-#' in the field network?
-#' 
+plot_top_cited_authors + plot_top_cited_countries + 
+    plot_annotation(tag_levels = "A") &
+    theme(plot.tag = element_text(size = 20, face = "bold"))
+
+ggsave(filename = "outputs/mains/most_cited_authors_and_countries.jpg",
+       height = 6, width = 14)
